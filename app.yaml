@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: BuildConfig
+metadata:
+  annotations:
+    pipeline.alpha.openshift.io/uses: '[{"name": "helloworld", "namespace": "", "kind": "DeploymentConfig"}]'|
+  labels:
+    app: helloworld
+  name: helloworld-pipeline
+spec:
+  strategy:
+    type: JenkinsPipeline
+    jenkinsPipelineStrategy:
+      jenkinsfile: |-
+        node {
+          stage('buildImage') {
+            openshiftBuild(buildConfig: 'helloworld', showBuildLogs: 'true')
+          }
+          stage('deployApplication') {
+            openshiftDeploy(deploymentConfig: 'helloworld')
+          }
+        }
+  triggers:
+    - type: GitHub
+      uri: "https://github.com/OmegaNeo/spring.git"
+      github:
+        secret: githubsecret
+  runPolicy: Serial
